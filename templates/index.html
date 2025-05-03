@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}Replit Agent - Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-dark rounded-3">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Replit Agent</h1>
+        <p class="col-md-8 fs-4">A comprehensive utility toolkit for file operations, code execution, project management, and AI-assisted development.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="file" class="me-2"></i>File Operations</h5>
+                <p class="card-text">Create, read, update, and delete files and directories with ease.</p>
+                <a href="{{ url_for('file_ops') }}" class="btn btn-primary">Manage Files</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="code" class="me-2"></i>Code Execution</h5>
+                <p class="card-text">Execute code in multiple languages directly from the web interface.</p>
+                <a href="{{ url_for('code_exec') }}" class="btn btn-primary">Execute Code</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="folder" class="me-2"></i>Project Management</h5>
+                <p class="card-text">Create and manage projects with templates for different languages.</p>
+                <a href="{{ url_for('project_mgmt') }}" class="btn btn-primary">Manage Projects</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="git-branch" class="me-2"></i>Git Integration</h5>
+                <p class="card-text">Perform git operations like commit, push, and pull from the web interface.</p>
+                <a href="{{ url_for('git_page') }}" class="btn btn-primary">Git Operations</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="package" class="me-2"></i>Package Management</h5>
+                <p class="card-text">Install, update, and remove packages for different languages.</p>
+                <a href="{{ url_for('package_mgmt') }}" class="btn btn-primary">Manage Packages</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="cpu" class="me-2"></i>AI Features</h5>
+                <p class="card-text">Generate code, explain code, suggest improvements, and more with AI.</p>
+                <a href="{{ url_for('ai_page') }}" class="btn btn-primary">AI Assistant</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="globe" class="me-2"></i>API Utilities</h5>
+                <p class="card-text">Fetch data from external APIs, download files, and more.</p>
+                <a href="{{ url_for('api_page') }}" class="btn btn-primary">API Tools</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i data-feather="database" class="me-2"></i>Database Operations</h5>
+                <p class="card-text">Interact with MongoDB Atlas for storing and retrieving data.</p>
+                <a href="{{ url_for('database_page') }}" class="btn btn-primary">Database Tools</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

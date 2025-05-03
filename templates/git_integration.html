@@ -1,0 +1,786 @@
+{% extends "layout.html" %}
+
+{% block title %}Replit Agent - Git Integration{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2><i data-feather="git-branch" class="me-2"></i>Git Integration</h2>
+        <p class="lead">Manage your Git repositories and perform common Git operations.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="git-commit" class="me-2"></i>Git Operations</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="git-directory" class="form-label">Repository Directory</label>
+                    <input type="text" class="form-control" id="git-directory" value="." placeholder="Path to the repository">
+                </div>
+                
+                <div class="mb-3">
+                    <button class="btn btn-outline-primary w-100 mb-2" id="init-repo-btn">
+                        <i data-feather="plus-circle" class="me-1"></i>Init Repository
+                    </button>
+                    <button class="btn btn-outline-primary w-100 mb-2" id="clone-repo-btn">
+                        <i data-feather="download" class="me-1"></i>Clone Repository
+                    </button>
+                    <button class="btn btn-primary w-100 mb-2" id="commit-btn">
+                        <i data-feather="git-commit" class="me-1"></i>Commit Changes
+                    </button>
+                    <button class="btn btn-outline-primary w-100 mb-2" id="push-btn">
+                        <i data-feather="upload-cloud" class="me-1"></i>Push Changes
+                    </button>
+                    <button class="btn btn-outline-primary w-100 mb-2" id="pull-btn">
+                        <i data-feather="download-cloud" class="me-1"></i>Pull Changes
+                    </button>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <label for="branch-name" class="form-label">Branch Operations</label>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="branch-name" placeholder="Branch name">
+                        <button class="btn btn-outline-primary" id="create-branch-btn">Create</button>
+                    </div>
+                    <button class="btn btn-outline-primary w-100" id="checkout-branch-btn">
+                        <i data-feather="git-branch" class="me-1"></i>Checkout Branch
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="settings" class="me-2"></i>Git Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="git-user-name" class="form-label">User Name</label>
+                    <input type="text" class="form-control" id="git-user-name" placeholder="Your Git user name">
+                </div>
+                <div class="mb-3">
+                    <label for="git-user-email" class="form-label">User Email</label>
+                    <input type="email" class="form-control" id="git-user-email" placeholder="Your Git email">
+                </div>
+                <button class="btn btn-outline-primary w-100" id="save-git-config-btn">
+                    <i data-feather="save" class="me-1"></i>Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i data-feather="info" class="me-2"></i>Repository Status</h5>
+                    <button class="btn btn-sm btn-outline-secondary" id="refresh-status-btn">
+                        <i data-feather="refresh-cw" class="me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="terminal" id="git-status">
+                    <div class="text-muted text-center">Click "Refresh" to see Git status</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="clock" class="me-2"></i>Commit History</h5>
+            </div>
+            <div class="card-body">
+                <div class="commit-history" id="git-log">
+                    <div class="text-muted text-center">No commit history available</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clone Repository Modal -->
+<div class="modal fade" id="clone-modal" tabindex="-1" aria-labelledby="clone-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clone-modal-label">Clone Repository</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="repo-url" class="form-label">Repository URL</label>
+                    <input type="text" class="form-control" id="repo-url" placeholder="https://github.com/username/repo.git">
+                </div>
+                <div class="mb-3">
+                    <label for="clone-directory" class="form-label">Destination Directory</label>
+                    <input type="text" class="form-control" id="clone-directory" placeholder="Directory name (leave empty for default)">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="use-credentials">
+                    <label class="form-check-label" for="use-credentials">
+                        Use credentials
+                    </label>
+                </div>
+                <div id="credentials-section" style="display: none;">
+                    <div class="mb-3">
+                        <label for="repo-username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="repo-username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="repo-password" class="form-label">Password/Token</label>
+                        <input type="password" class="form-control" id="repo-password">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="clone-submit-btn">Clone</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commit Modal -->
+<div class="modal fade" id="commit-modal" tabindex="-1" aria-labelledby="commit-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="commit-modal-label">Commit Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="commit-message" class="form-label">Commit Message</label>
+                    <textarea class="form-control" id="commit-message" rows="3" placeholder="Enter a commit message"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="file-paths" class="form-label">Files to Commit (leave empty for all changes)</label>
+                    <input type="text" class="form-control" id="file-paths" placeholder="e.g., file1.py,file2.js,dir/file3.txt">
+                    <small class="form-text text-muted">Comma-separated list of file paths</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="commit-submit-btn">Commit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Branch Modal -->
+<div class="modal fade" id="checkout-modal" tabindex="-1" aria-labelledby="checkout-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkout-modal-label">Checkout Branch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="existing-branches" class="form-label">Select Branch</label>
+                    <select class="form-select" id="existing-branches">
+                        <option value="" selected disabled>Loading branches...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="checkout-submit-btn">Checkout</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const gitDirectoryInput = document.getElementById('git-directory');
+        const gitStatusEl = document.getElementById('git-status');
+        const gitLogEl = document.getElementById('git-log');
+        
+        // Buttons
+        const initRepoBtn = document.getElementById('init-repo-btn');
+        const cloneRepoBtn = document.getElementById('clone-repo-btn');
+        const commitBtn = document.getElementById('commit-btn');
+        const pushBtn = document.getElementById('push-btn');
+        const pullBtn = document.getElementById('pull-btn');
+        const refreshStatusBtn = document.getElementById('refresh-status-btn');
+        const createBranchBtn = document.getElementById('create-branch-btn');
+        const checkoutBranchBtn = document.getElementById('checkout-branch-btn');
+        const saveGitConfigBtn = document.getElementById('save-git-config-btn');
+        
+        // Modal elements
+        const cloneModal = new bootstrap.Modal(document.getElementById('clone-modal'));
+        const commitModal = new bootstrap.Modal(document.getElementById('commit-modal'));
+        const checkoutModal = new bootstrap.Modal(document.getElementById('checkout-modal'));
+        
+        // Clone modal elements
+        const repoUrlInput = document.getElementById('repo-url');
+        const cloneDirectoryInput = document.getElementById('clone-directory');
+        const useCredentialsCheckbox = document.getElementById('use-credentials');
+        const credentialsSection = document.getElementById('credentials-section');
+        const repoUsernameInput = document.getElementById('repo-username');
+        const repoPasswordInput = document.getElementById('repo-password');
+        const cloneSubmitBtn = document.getElementById('clone-submit-btn');
+        
+        // Commit modal elements
+        const commitMessageInput = document.getElementById('commit-message');
+        const filePathsInput = document.getElementById('file-paths');
+        const commitSubmitBtn = document.getElementById('commit-submit-btn');
+        
+        // Checkout modal elements
+        const existingBranchesSelect = document.getElementById('existing-branches');
+        const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+        
+        // Git config elements
+        const gitUserNameInput = document.getElementById('git-user-name');
+        const gitUserEmailInput = document.getElementById('git-user-email');
+        
+        // Branch input
+        const branchNameInput = document.getElementById('branch-name');
+        
+        // Get Git status
+        function getGitStatus() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            gitStatusEl.innerHTML = `
+                <div class="text-muted text-center">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Fetching Git status...
+                </div>
+            `;
+            
+            fetch(`/api/git/status?directory=${encodeURIComponent(directory)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        gitStatusEl.innerHTML = `<pre>${escapeHtml(data.git_status)}</pre>`;
+                    } else {
+                        gitStatusEl.innerHTML = `<div class="text-danger">${data.message || 'Failed to get Git status'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting Git status:', error);
+                    gitStatusEl.innerHTML = `<div class="text-danger">Error: ${error.message}</div>`;
+                });
+        }
+        
+        // Get Git log
+        function getGitLog() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            gitLogEl.innerHTML = `
+                <div class="text-muted text-center">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Fetching commit history...
+                </div>
+            `;
+            
+            fetch(`/api/git/log?directory=${encodeURIComponent(directory)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (!data.git_log) {
+                            gitLogEl.innerHTML = '<div class="text-muted text-center">No commit history available</div>';
+                            return;
+                        }
+                        
+                        // Format the git log output
+                        const logLines = data.git_log.trim().split('\n');
+                        let logHtml = '';
+                        
+                        logLines.forEach(line => {
+                            const parts = line.split(' ');
+                            const hash = parts[0];
+                            const message = parts.slice(1).join(' ');
+                            
+                            logHtml += `
+                                <div class="commit-item">
+                                    <span class="commit-hash">${hash}</span>
+                                    <span class="commit-message">${escapeHtml(message)}</span>
+                                </div>
+                            `;
+                        });
+                        
+                        gitLogEl.innerHTML = logHtml;
+                    } else {
+                        gitLogEl.innerHTML = `<div class="text-danger">${data.message || 'Failed to get Git log'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting Git log:', error);
+                    gitLogEl.innerHTML = `<div class="text-danger">Error: ${error.message}</div>`;
+                });
+        }
+        
+        // Initialize repository
+        function initRepo() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            if (!confirm(`Are you sure you want to initialize a Git repository in "${directory}"?`)) {
+                return;
+            }
+            
+            initRepoBtn.disabled = true;
+            initRepoBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Initializing...';
+            
+            fetch('/api/git/init', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    directory: directory
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert('Git repository initialized successfully!', 'success');
+                        getGitStatus();
+                    } else {
+                        showAlert(data.message || 'Failed to initialize Git repository', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error initializing Git repository:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    initRepoBtn.disabled = false;
+                    initRepoBtn.innerHTML = '<i data-feather="plus-circle" class="me-1"></i>Init Repository';
+                    feather.replace();
+                });
+        }
+        
+        // Clone repository
+        function cloneRepo() {
+            const url = repoUrlInput.value.trim();
+            const directory = cloneDirectoryInput.value.trim();
+            const useCredentials = useCredentialsCheckbox.checked;
+            const username = repoUsernameInput.value.trim();
+            const password = repoPasswordInput.value.trim();
+            
+            if (!url) {
+                showAlert('Please enter a repository URL', 'warning');
+                return;
+            }
+            
+            cloneSubmitBtn.disabled = true;
+            cloneSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cloning...';
+            
+            let cloneUrl = url;
+            
+            // Add credentials to URL if needed
+            if (useCredentials && username && password) {
+                const urlObj = new URL(url);
+                urlObj.username = username;
+                urlObj.password = password;
+                cloneUrl = urlObj.toString();
+            }
+            
+            fetch('/api/git/clone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url: cloneUrl,
+                    directory: directory
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert('Repository cloned successfully!', 'success');
+                        cloneModal.hide();
+                        
+                        // Update directory input if a directory was specified
+                        if (directory) {
+                            gitDirectoryInput.value = directory;
+                        }
+                        
+                        getGitStatus();
+                        getGitLog();
+                    } else {
+                        showAlert(data.message || 'Failed to clone repository', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cloning repository:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    cloneSubmitBtn.disabled = false;
+                    cloneSubmitBtn.innerHTML = 'Clone';
+                });
+        }
+        
+        // Commit changes
+        function commitChanges() {
+            const directory = gitDirectoryInput.value.trim();
+            const message = commitMessageInput.value.trim();
+            const filePaths = filePathsInput.value.trim().split(',').filter(path => path.trim());
+            
+            if (!message) {
+                showAlert('Please enter a commit message', 'warning');
+                return;
+            }
+            
+            commitSubmitBtn.disabled = true;
+            commitSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Committing...';
+            
+            const requestData = {
+                directory: directory,
+                message: message
+            };
+            
+            if (filePaths.length > 0) {
+                requestData.paths = filePaths;
+            }
+            
+            fetch('/api/git/commit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert('Changes committed successfully!', 'success');
+                        commitModal.hide();
+                        
+                        // Clear form
+                        commitMessageInput.value = '';
+                        filePathsInput.value = '';
+                        
+                        getGitStatus();
+                        getGitLog();
+                    } else {
+                        showAlert(data.message || 'Failed to commit changes', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error committing changes:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    commitSubmitBtn.disabled = false;
+                    commitSubmitBtn.innerHTML = 'Commit';
+                });
+        }
+        
+        // Push changes
+        function pushChanges() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            if (!confirm('Are you sure you want to push changes to the remote repository?')) {
+                return;
+            }
+            
+            pushBtn.disabled = true;
+            pushBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Pushing...';
+            
+            fetch('/api/git/push', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    directory: directory
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert('Changes pushed successfully!', 'success');
+                        getGitStatus();
+                    } else {
+                        showAlert(data.message || 'Failed to push changes', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error pushing changes:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    pushBtn.disabled = false;
+                    pushBtn.innerHTML = '<i data-feather="upload-cloud" class="me-1"></i>Push Changes';
+                    feather.replace();
+                });
+        }
+        
+        // Pull changes
+        function pullChanges() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            pullBtn.disabled = true;
+            pullBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Pulling...';
+            
+            fetch('/api/git/pull', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    directory: directory
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert('Changes pulled successfully!', 'success');
+                        getGitStatus();
+                        getGitLog();
+                    } else {
+                        showAlert(data.message || 'Failed to pull changes', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error pulling changes:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    pullBtn.disabled = false;
+                    pullBtn.innerHTML = '<i data-feather="download-cloud" class="me-1"></i>Pull Changes';
+                    feather.replace();
+                });
+        }
+        
+        // Create branch
+        function createBranch() {
+            const directory = gitDirectoryInput.value.trim();
+            const branchName = branchNameInput.value.trim();
+            
+            if (!branchName) {
+                showAlert('Please enter a branch name', 'warning');
+                return;
+            }
+            
+            createBranchBtn.disabled = true;
+            createBranchBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            
+            fetch('/api/git/create-branch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    directory: directory,
+                    branch: branchName
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert(`Branch "${branchName}" created successfully!`, 'success');
+                        branchNameInput.value = '';
+                        getGitStatus();
+                    } else {
+                        showAlert(data.message || 'Failed to create branch', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating branch:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    createBranchBtn.disabled = false;
+                    createBranchBtn.innerHTML = 'Create';
+                });
+        }
+        
+        // Get branches
+        function getBranches() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            existingBranchesSelect.innerHTML = '<option value="" selected disabled>Loading branches...</option>';
+            
+            fetch(`/api/git/branches?directory=${encodeURIComponent(directory)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const branches = data.branches || [];
+                        
+                        if (branches.length === 0) {
+                            existingBranchesSelect.innerHTML = '<option value="" selected disabled>No branches found</option>';
+                            return;
+                        }
+                        
+                        let options = '';
+                        branches.forEach(branch => {
+                            options += `<option value="${branch}">${branch}</option>`;
+                        });
+                        
+                        existingBranchesSelect.innerHTML = options;
+                    } else {
+                        existingBranchesSelect.innerHTML = '<option value="" selected disabled>Error loading branches</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting branches:', error);
+                    existingBranchesSelect.innerHTML = '<option value="" selected disabled>Error loading branches</option>';
+                });
+        }
+        
+        // Checkout branch
+        function checkoutBranch() {
+            const directory = gitDirectoryInput.value.trim();
+            const branchName = existingBranchesSelect.value;
+            
+            if (!branchName) {
+                showAlert('Please select a branch', 'warning');
+                return;
+            }
+            
+            checkoutSubmitBtn.disabled = true;
+            checkoutSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Checking out...';
+            
+            fetch('/api/git/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    directory: directory,
+                    branch: branchName
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert(`Checked out branch "${branchName}" successfully!`, 'success');
+                        checkoutModal.hide();
+                        getGitStatus();
+                        getGitLog();
+                    } else {
+                        showAlert(data.message || 'Failed to checkout branch', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking out branch:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    checkoutSubmitBtn.disabled = false;
+                    checkoutSubmitBtn.innerHTML = 'Checkout';
+                });
+        }
+        
+        // Save Git configuration
+        function saveGitConfig() {
+            const directory = gitDirectoryInput.value.trim();
+            const userName = gitUserNameInput.value.trim();
+            const userEmail = gitUserEmailInput.value.trim();
+            
+            if (!userName || !userEmail) {
+                showAlert('Please enter both user name and email', 'warning');
+                return;
+            }
+            
+            saveGitConfigBtn.disabled = true;
+            saveGitConfigBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            
+            fetch('/api/git/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    directory: directory,
+                    user_name: userName,
+                    user_email: userEmail
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showAlert('Git configuration saved successfully!', 'success');
+                    } else {
+                        showAlert(data.message || 'Failed to save Git configuration', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving Git configuration:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                })
+                .finally(() => {
+                    saveGitConfigBtn.disabled = false;
+                    saveGitConfigBtn.innerHTML = '<i data-feather="save" class="me-1"></i>Save Configuration';
+                    feather.replace();
+                });
+        }
+        
+        // Get Git configuration
+        function getGitConfig() {
+            const directory = gitDirectoryInput.value.trim();
+            
+            fetch(`/api/git/config?directory=${encodeURIComponent(directory)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        gitUserNameInput.value = data.user_name || '';
+                        gitUserEmailInput.value = data.user_email || '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting Git configuration:', error);
+                });
+        }
+        
+        // Event listeners
+        initRepoBtn.addEventListener('click', initRepo);
+        cloneRepoBtn.addEventListener('click', () => cloneModal.show());
+        commitBtn.addEventListener('click', () => commitModal.show());
+        pushBtn.addEventListener('click', pushChanges);
+        pullBtn.addEventListener('click', pullChanges);
+        refreshStatusBtn.addEventListener('click', () => {
+            getGitStatus();
+            getGitLog();
+        });
+        
+        cloneSubmitBtn.addEventListener('click', cloneRepo);
+        commitSubmitBtn.addEventListener('click', commitChanges);
+        
+        createBranchBtn.addEventListener('click', createBranch);
+        checkoutBranchBtn.addEventListener('click', () => {
+            getBranches();
+            checkoutModal.show();
+        });
+        checkoutSubmitBtn.addEventListener('click', checkoutBranch);
+        
+        saveGitConfigBtn.addEventListener('click', saveGitConfig);
+        
+        useCredentialsCheckbox.addEventListener('change', function() {
+            credentialsSection.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Initial load
+        getGitStatus();
+        getGitLog();
+        getGitConfig();
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    });
+</script>
+{% endblock %}

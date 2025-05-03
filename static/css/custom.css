@@ -1,0 +1,218 @@
+/* Custom styles for Replit Agent */
+
+/* Global styles */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  flex: 1;
+}
+
+/* Card hover effect */
+.card {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* File browser styles */
+.file-browser {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.file-item {
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.file-item:hover {
+  background-color: var(--bs-dark);
+}
+
+.file-item i {
+  margin-right: 8px;
+}
+
+/* Code editor styles */
+.editor-container {
+  border-radius: 4px;
+  overflow: hidden;
+  height: 400px;
+}
+
+.CodeMirror {
+  height: 100%;
+  font-family: 'Fira Code', monospace;
+}
+
+.output-container {
+  background-color: var(--bs-dark);
+  border-radius: 4px;
+  padding: 15px;
+  font-family: 'Fira Code', monospace;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Terminal styles */
+.terminal {
+  background-color: var(--bs-dark);
+  color: var(--bs-light);
+  font-family: 'Fira Code', monospace;
+  padding: 15px;
+  border-radius: 4px;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.terminal .success {
+  color: var(--bs-success);
+}
+
+.terminal .error {
+  color: var(--bs-danger);
+}
+
+.terminal .warning {
+  color: var(--bs-warning);
+}
+
+.terminal .info {
+  color: var(--bs-info);
+}
+
+/* Project card styles */
+.project-card {
+  margin-bottom: 20px;
+}
+
+.project-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-card .badge {
+  font-size: 0.8rem;
+}
+
+/* Git commit history */
+.commit-history {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.commit-item {
+  padding: 10px;
+  border-bottom: 1px solid var(--bs-dark);
+}
+
+.commit-hash {
+  font-family: monospace;
+  color: var(--bs-info);
+}
+
+/* Package list styles */
+.package-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.package-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--bs-dark);
+}
+
+.package-version {
+  font-family: monospace;
+  color: var(--bs-info);
+}
+
+/* AI response formatting */
+.ai-response {
+  background-color: var(--bs-dark);
+  border-left: 4px solid var(--bs-info);
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+  white-space: pre-wrap;
+}
+
+.code-block {
+  background-color: var(--bs-dark);
+  border-radius: 4px;
+  padding: 15px;
+  font-family: 'Fira Code', monospace;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Database document display */
+.document-view {
+  font-family: monospace;
+  background-color: var(--bs-dark);
+  padding: 15px;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Footer style */
+.footer {
+  margin-top: auto;
+  padding: 20px 0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bs-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bs-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bs-primary);
+}
+
+/* Utility classes */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.text-monospace {
+  font-family: monospace;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.min-height-300 {
+  min-height: 300px;
+}
+
+.min-height-400 {
+  min-height: 400px;
+}

@@ -1,0 +1,790 @@
+{% extends "layout.html" %}
+
+{% block title %}Replit Agent - Package Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2><i data-feather="package" class="me-2"></i>Package Management</h2>
+        <p class="lead">Install, update, and manage packages for different programming languages.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="plus-square" class="me-2"></i>Install Package</h5>
+            </div>
+            <div class="card-body">
+                <form id="install-package-form">
+                    <div class="mb-3">
+                        <label for="package-name" class="form-label">Package Name</label>
+                        <input type="text" class="form-control" id="package-name" placeholder="e.g., requests, numpy, express">
+                        <small class="form-text text-muted">You can specify version: package==1.0.0</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="package-language" class="form-label">Language</label>
+                        <select class="form-select" id="package-language">
+                            <option value="python" selected>Python (pip)</option>
+                            <option value="javascript">JavaScript (npm)</option>
+                            <option value="ruby">Ruby (gem)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i data-feather="download" class="me-1"></i>Install Package
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="trash-2" class="me-2"></i>Uninstall Package</h5>
+            </div>
+            <div class="card-body">
+                <form id="uninstall-package-form">
+                    <div class="mb-3">
+                        <label for="uninstall-package-name" class="form-label">Package Name</label>
+                        <input type="text" class="form-control" id="uninstall-package-name" placeholder="e.g., requests, numpy, express">
+                    </div>
+                    <div class="mb-3">
+                        <label for="uninstall-package-language" class="form-label">Language</label>
+                        <select class="form-select" id="uninstall-package-language">
+                            <option value="python" selected>Python (pip)</option>
+                            <option value="javascript">JavaScript (npm)</option>
+                            <option value="ruby">Ruby (gem)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i data-feather="trash" class="me-1"></i>Uninstall Package
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="file-text" class="me-2"></i>Generate Requirements</h5>
+            </div>
+            <div class="card-body">
+                <form id="generate-requirements-form">
+                    <div class="mb-3">
+                        <label for="requirements-file-name" class="form-label">Output File</label>
+                        <input type="text" class="form-control" id="requirements-file-name" value="requirements.txt">
+                    </div>
+                    <div class="mb-3">
+                        <label for="requirements-language" class="form-label">Language</label>
+                        <select class="form-select" id="requirements-language">
+                            <option value="python" selected>Python (requirements.txt)</option>
+                            <option value="javascript">JavaScript (package.json)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i data-feather="file-plus" class="me-1"></i>Generate Requirements File
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i data-feather="list" class="me-2"></i>Installed Packages</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" id="refresh-packages-btn">
+                            <i data-feather="refresh-cw" class="me-1"></i>Refresh
+                        </button>
+                        <div class="btn-group ms-2">
+                            <button class="btn btn-sm btn-outline-secondary active" id="python-packages-btn">Python</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="javascript-packages-btn">JavaScript</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="ruby-packages-btn">Ruby</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i data-feather="search"></i></span>
+                    <input type="text" class="form-control" id="package-search" placeholder="Search packages...">
+                </div>
+                <div class="package-list" id="package-list-container">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading packages...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="info" class="me-2"></i>Package Information</h5>
+            </div>
+            <div class="card-body">
+                <div id="package-info-container">
+                    <div class="text-center text-muted">
+                        <i data-feather="package" style="width: 48px; height: 48px;"></i>
+                        <p class="mt-2">Select a package to view details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Package Details Modal -->
+<div class="modal fade" id="package-details-modal" tabindex="-1" aria-labelledby="package-details-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="package-details-label">Package Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="package-details-content">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading package details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger" id="modal-uninstall-btn">
+                    <i data-feather="trash-2" class="me-1"></i>Uninstall
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Installation Progress Modal -->
+<div class="modal fade" id="progress-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="progress-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="progress-modal-label">Installing Package</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <p id="progress-message">Installing package... Please wait.</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const installPackageForm = document.getElementById('install-package-form');
+        const packageNameInput = document.getElementById('package-name');
+        const packageLanguageSelect = document.getElementById('package-language');
+        
+        const uninstallPackageForm = document.getElementById('uninstall-package-form');
+        const uninstallPackageNameInput = document.getElementById('uninstall-package-name');
+        const uninstallPackageLanguageSelect = document.getElementById('uninstall-package-language');
+        
+        const generateRequirementsForm = document.getElementById('generate-requirements-form');
+        const requirementsFileNameInput = document.getElementById('requirements-file-name');
+        const requirementsLanguageSelect = document.getElementById('requirements-language');
+        
+        const packageListContainer = document.getElementById('package-list-container');
+        const packageSearchInput = document.getElementById('package-search');
+        const packageInfoContainer = document.getElementById('package-info-container');
+        
+        const refreshPackagesBtn = document.getElementById('refresh-packages-btn');
+        const pythonPackagesBtn = document.getElementById('python-packages-btn');
+        const javascriptPackagesBtn = document.getElementById('javascript-packages-btn');
+        const rubyPackagesBtn = document.getElementById('ruby-packages-btn');
+        
+        const progressModal = new bootstrap.Modal(document.getElementById('progress-modal'));
+        const progressMessage = document.getElementById('progress-message');
+        const progressModalLabel = document.getElementById('progress-modal-label');
+        
+        const packageDetailsModal = new bootstrap.Modal(document.getElementById('package-details-modal'));
+        const packageDetailsContent = document.getElementById('package-details-content');
+        const packageDetailsLabel = document.getElementById('package-details-label');
+        const modalUninstallBtn = document.getElementById('modal-uninstall-btn');
+        
+        let currentLanguage = 'python';
+        let currentPackages = [];
+        let selectedPackage = null;
+        
+        // Load packages for the current language
+        function loadPackages() {
+            packageListContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading packages...</p>
+                </div>
+            `;
+            
+            fetch(`/api/package/list?language=${currentLanguage}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        currentPackages = data.packages || [];
+                        renderPackages(currentPackages);
+                    } else {
+                        showAlert(data.message || 'Failed to load packages', 'danger');
+                        packageListContainer.innerHTML = `
+                            <div class="alert alert-danger">
+                                Failed to load packages
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading packages:', error);
+                    packageListContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            Error: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+        
+        // Render packages in the list
+        function renderPackages(packages) {
+            if (!packages || packages.length === 0) {
+                packageListContainer.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i data-feather="package" style="width: 32px; height: 32px;"></i>
+                        <p class="mt-2">No packages installed</p>
+                    </div>
+                `;
+                feather.replace();
+                return;
+            }
+            
+            // Sort packages alphabetically
+            packages.sort((a, b) => a.name.localeCompare(b.name));
+            
+            let html = '';
+            packages.forEach(pkg => {
+                html += `
+                    <div class="package-item" data-name="${pkg.name}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${escapeHtml(pkg.name)}</strong>
+                                <span class="package-version ms-2">${escapeHtml(pkg.version || '')}</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-info view-package-btn" data-name="${pkg.name}">
+                                    <i data-feather="info" class="me-1"></i>Details
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger uninstall-package-btn" data-name="${pkg.name}">
+                                    <i data-feather="trash-2" class="me-1"></i>Uninstall
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            packageListContainer.innerHTML = html;
+            feather.replace();
+            
+            // Add event listeners
+            document.querySelectorAll('.view-package-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const packageName = this.dataset.name;
+                    showPackageDetails(packageName);
+                });
+            });
+            
+            document.querySelectorAll('.uninstall-package-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const packageName = this.dataset.name;
+                    confirmUninstallPackage(packageName);
+                });
+            });
+            
+            document.querySelectorAll('.package-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Only respond to clicks on the item itself, not on buttons
+                    if (e.target.closest('button')) return;
+                    
+                    const packageName = this.dataset.name;
+                    showPackageInfo(packageName);
+                });
+            });
+        }
+        
+        // Show package info in the sidebar
+        function showPackageInfo(packageName) {
+            const package = currentPackages.find(pkg => pkg.name === packageName);
+            if (!package) return;
+            
+            selectedPackage = package;
+            
+            // Highlight the selected package
+            document.querySelectorAll('.package-item').forEach(item => {
+                item.classList.remove('bg-dark');
+            });
+            
+            const packageItem = document.querySelector(`.package-item[data-name="${packageName}"]`);
+            if (packageItem) {
+                packageItem.classList.add('bg-dark');
+            }
+            
+            // Show package info
+            packageInfoContainer.innerHTML = `
+                <h4>${escapeHtml(package.name)}</h4>
+                <p><span class="badge bg-info">${escapeHtml(package.version || 'unknown')}</span></p>
+                
+                <div class="mt-3">
+                    <h6>Quick Actions</h6>
+                    <button class="btn btn-sm btn-outline-danger uninstall-pkg-btn" data-name="${package.name}">
+                        <i data-feather="trash-2" class="me-1"></i>Uninstall
+                    </button>
+                    <button class="btn btn-sm btn-outline-info details-pkg-btn" data-name="${package.name}">
+                        <i data-feather="info" class="me-1"></i>View Details
+                    </button>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Install Command</h6>
+                    <div class="code-block p-2 bg-dark text-light">
+                        ${getInstallCommand(package.name, currentLanguage)}
+                    </div>
+                </div>
+            `;
+            feather.replace();
+            
+            // Add event listeners
+            packageInfoContainer.querySelector('.uninstall-pkg-btn').addEventListener('click', function() {
+                const packageName = this.dataset.name;
+                confirmUninstallPackage(packageName);
+            });
+            
+            packageInfoContainer.querySelector('.details-pkg-btn').addEventListener('click', function() {
+                const packageName = this.dataset.name;
+                showPackageDetails(packageName);
+            });
+        }
+        
+        // Show package details in a modal
+        function showPackageDetails(packageName) {
+            packageDetailsLabel.textContent = `Package: ${packageName}`;
+            packageDetailsContent.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading package details...</p>
+                </div>
+            `;
+            
+            packageDetailsModal.show();
+            
+            // For future API calls to fetch package details from PyPI, npm, etc.
+            // For now, just show basic info
+            fetch(`/api/package/info?name=${encodeURIComponent(packageName)}&language=${currentLanguage}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        renderPackageDetails(data.package_info || {});
+                    } else {
+                        packageDetailsContent.innerHTML = `
+                            <div class="alert alert-warning">
+                                ${data.message || 'Failed to load package details. Showing basic information.'}
+                            </div>
+                            ${getBasicPackageDetails(packageName)}
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading package details:', error);
+                    packageDetailsContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            Error: ${error.message}
+                        </div>
+                        ${getBasicPackageDetails(packageName)}
+                    `;
+                });
+                
+            // Set up uninstall button
+            modalUninstallBtn.dataset.name = packageName;
+            modalUninstallBtn.addEventListener('click', function() {
+                const packageName = this.dataset.name;
+                packageDetailsModal.hide();
+                confirmUninstallPackage(packageName);
+            }, { once: true });
+        }
+        
+        // Render package details in the modal
+        function renderPackageDetails(packageInfo) {
+            const package = currentPackages.find(pkg => pkg.name === packageInfo.name) || {};
+            
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4>${escapeHtml(packageInfo.name || '')}</h4>
+                        <p>${escapeHtml(packageInfo.description || 'No description available.')}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-info fs-6">${escapeHtml(package.version || 'unknown')}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Add installation info
+            html += `
+                <div class="mb-3">
+                    <h5>Installation Command</h5>
+                    <div class="code-block p-2 bg-dark text-light">
+                        ${getInstallCommand(packageInfo.name, currentLanguage)}
+                    </div>
+                </div>
+            `;
+            
+            // Add additional info if available
+            if (packageInfo.homepage) {
+                html += `
+                    <div class="mb-3">
+                        <h5>Homepage</h5>
+                        <a href="${packageInfo.homepage}" target="_blank" rel="noopener noreferrer">${packageInfo.homepage}</a>
+                    </div>
+                `;
+            }
+            
+            if (packageInfo.author) {
+                html += `
+                    <div class="mb-3">
+                        <h5>Author</h5>
+                        <p>${escapeHtml(packageInfo.author)}</p>
+                    </div>
+                `;
+            }
+            
+            if (packageInfo.license) {
+                html += `
+                    <div class="mb-3">
+                        <h5>License</h5>
+                        <p>${escapeHtml(packageInfo.license)}</p>
+                    </div>
+                `;
+            }
+            
+            // Add dependencies if available
+            if (packageInfo.dependencies && Object.keys(packageInfo.dependencies).length > 0) {
+                html += `
+                    <div class="mb-3">
+                        <h5>Dependencies</h5>
+                        <ul class="list-group">
+                `;
+                
+                for (const [dep, version] of Object.entries(packageInfo.dependencies)) {
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${escapeHtml(dep)}
+                            <span class="badge bg-secondary">${escapeHtml(version)}</span>
+                        </li>
+                    `;
+                }
+                
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            packageDetailsContent.innerHTML = html;
+        }
+        
+        // Get basic package details for fallback
+        function getBasicPackageDetails(packageName) {
+            const package = currentPackages.find(pkg => pkg.name === packageName) || {};
+            
+            return `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${escapeHtml(packageName)}</h5>
+                        <p class="card-text">Version: ${escapeHtml(package.version || 'unknown')}</p>
+                        <p class="card-text">Language: ${currentLanguage}</p>
+                        <div class="mt-3">
+                            <h6>Installation Command</h6>
+                            <div class="code-block p-2 bg-dark text-light">
+                                ${getInstallCommand(packageName, currentLanguage)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Get the installation command for a package
+        function getInstallCommand(packageName, language) {
+            switch (language) {
+                case 'python':
+                    return `pip install ${packageName}`;
+                case 'javascript':
+                    return `npm install ${packageName}`;
+                case 'ruby':
+                    return `gem install ${packageName}`;
+                default:
+                    return `install ${packageName}`;
+            }
+        }
+        
+        // Confirm uninstall package
+        function confirmUninstallPackage(packageName) {
+            if (confirm(`Are you sure you want to uninstall ${packageName}?`)) {
+                uninstallPackage(packageName, currentLanguage);
+            }
+        }
+        
+        // Install package
+        function installPackage(packageName, language) {
+            if (!packageName) {
+                showAlert('Please enter a package name', 'warning');
+                return;
+            }
+            
+            // Show progress modal
+            progressModalLabel.textContent = 'Installing Package';
+            progressMessage.textContent = `Installing ${packageName}... Please wait.`;
+            progressModal.show();
+            
+            fetch('/api/package/install', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    package: packageName,
+                    language: language
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    progressModal.hide();
+                    
+                    if (data.status === 'success') {
+                        showAlert(`Package ${packageName} installed successfully!`, 'success');
+                        packageNameInput.value = '';
+                        loadPackages();
+                    } else {
+                        showAlert(data.message || `Failed to install package ${packageName}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    progressModal.hide();
+                    console.error('Error installing package:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                });
+        }
+        
+        // Uninstall package
+        function uninstallPackage(packageName, language) {
+            if (!packageName) {
+                showAlert('Please enter a package name', 'warning');
+                return;
+            }
+            
+            // Show progress modal
+            progressModalLabel.textContent = 'Uninstalling Package';
+            progressMessage.textContent = `Uninstalling ${packageName}... Please wait.`;
+            progressModal.show();
+            
+            fetch('/api/package/uninstall', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    package: packageName,
+                    language: language
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    progressModal.hide();
+                    
+                    if (data.status === 'success') {
+                        showAlert(`Package ${packageName} uninstalled successfully!`, 'success');
+                        uninstallPackageNameInput.value = '';
+                        loadPackages();
+                        
+                        // Clear package info if this was the selected package
+                        if (selectedPackage && selectedPackage.name === packageName) {
+                            packageInfoContainer.innerHTML = `
+                                <div class="text-center text-muted">
+                                    <i data-feather="package" style="width: 48px; height: 48px;"></i>
+                                    <p class="mt-2">Select a package to view details</p>
+                                </div>
+                            `;
+                            feather.replace();
+                            selectedPackage = null;
+                        }
+                    } else {
+                        showAlert(data.message || `Failed to uninstall package ${packageName}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    progressModal.hide();
+                    console.error('Error uninstalling package:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                });
+        }
+        
+        // Generate requirements file
+        function generateRequirementsFile(outputFile, language) {
+            if (!outputFile) {
+                showAlert('Please enter an output file name', 'warning');
+                return;
+            }
+            
+            // Show progress modal
+            progressModalLabel.textContent = 'Generating Requirements File';
+            progressMessage.textContent = `Generating ${outputFile}... Please wait.`;
+            progressModal.show();
+            
+            fetch('/api/package/generate-requirements', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    output_file: outputFile,
+                    language: language
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    progressModal.hide();
+                    
+                    if (data.status === 'success') {
+                        showAlert(`Requirements file ${outputFile} generated successfully!`, 'success');
+                    } else {
+                        showAlert(data.message || `Failed to generate requirements file`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    progressModal.hide();
+                    console.error('Error generating requirements file:', error);
+                    showAlert(`Error: ${error.message}`, 'danger');
+                });
+        }
+        
+        // Filter packages
+        packageSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                renderPackages(currentPackages);
+                return;
+            }
+            
+            const filteredPackages = currentPackages.filter(pkg => {
+                return pkg.name.toLowerCase().includes(searchTerm);
+            });
+            
+            renderPackages(filteredPackages);
+        });
+        
+        // Event handlers for language buttons
+        pythonPackagesBtn.addEventListener('click', function() {
+            setActiveLanguage('python');
+        });
+        
+        javascriptPackagesBtn.addEventListener('click', function() {
+            setActiveLanguage('javascript');
+        });
+        
+        rubyPackagesBtn.addEventListener('click', function() {
+            setActiveLanguage('ruby');
+        });
+        
+        // Set active language and update UI
+        function setActiveLanguage(language) {
+            currentLanguage = language;
+            
+            // Update active button
+            [pythonPackagesBtn, javascriptPackagesBtn, rubyPackagesBtn].forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (language === 'python') {
+                pythonPackagesBtn.classList.add('active');
+            } else if (language === 'javascript') {
+                javascriptPackagesBtn.classList.add('active');
+            } else if (language === 'ruby') {
+                rubyPackagesBtn.classList.add('active');
+            }
+            
+            // Clear package info
+            packageInfoContainer.innerHTML = `
+                <div class="text-center text-muted">
+                    <i data-feather="package" style="width: 48px; height: 48px;"></i>
+                    <p class="mt-2">Select a package to view details</p>
+                </div>
+            `;
+            feather.replace();
+            selectedPackage = null;
+            
+            // Reload packages
+            loadPackages();
+        }
+        
+        // Refresh packages
+        refreshPackagesBtn.addEventListener('click', loadPackages);
+        
+        // Install package form submission
+        installPackageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const packageName = packageNameInput.value.trim();
+            const language = packageLanguageSelect.value;
+            installPackage(packageName, language);
+        });
+        
+        // Uninstall package form submission
+        uninstallPackageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const packageName = uninstallPackageNameInput.value.trim();
+            const language = uninstallPackageLanguageSelect.value;
+            if (confirm(`Are you sure you want to uninstall ${packageName}?`)) {
+                uninstallPackage(packageName, language);
+            }
+        });
+        
+        // Generate requirements form submission
+        generateRequirementsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const outputFile = requirementsFileNameInput.value.trim();
+            const language = requirementsLanguageSelect.value;
+            generateRequirementsFile(outputFile, language);
+        });
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initial load
+        loadPackages();
+    });
+</script>
+{% endblock %}
