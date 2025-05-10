@@ -1,2 +1,0 @@
-# ReplitAgent
-A REPLIT AGENT
