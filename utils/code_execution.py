@@ -5,16 +5,7 @@ import logging
 import time
 
 def execute_code(code, language='python'):
-    """
-    Execute code in the specified language.
-    
-    Args:
-        code (str): The code to execute
-        language (str): Programming language of the code
-    
-    Returns:
-        dict: Dictionary containing stdout, stderr, and execution time
-    """
+
     supported_languages = {
         'python': {
             'ext': 'py',

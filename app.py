@@ -32,8 +32,8 @@ if database_url:
         db.create_all()
 else:
     logging.warning("No DATABASE_URL found in environment variables. Database functionality disabled.")
-
 # Import utility modules
+
 from utils import file_operations, code_execution, project_management, \
                  git_integration, package_management, user_interaction, \
                  ai_features, api_utils, db_helper
